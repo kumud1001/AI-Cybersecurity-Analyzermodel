@@ -27,3 +27,4 @@ models/*.keras
 # OS
 .DS_Store
 Thumbs.db
+.env

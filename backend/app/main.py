@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from backend.app.api.analysis import router as analysis_router
+from backend.app.api.dashboard import router as dashboard_router
 
 
 app = FastAPI(
@@ -9,11 +10,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
 app.include_router(analysis_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/")
 def root():
+
     return {
         "message": "AI Cybersecurity Analyzer API is running"
     }
@@ -21,6 +25,7 @@ def root():
 
 @app.get("/health")
 def health():
+
     return {
         "status": "healthy"
     }
