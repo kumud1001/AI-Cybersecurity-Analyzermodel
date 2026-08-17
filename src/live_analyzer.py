@@ -1,3 +1,4 @@
+import requests
 import joblib
 import numpy as np
 
@@ -14,15 +15,37 @@ from src.model_features import prepare_model_features
 
 
 MODEL_PATH = "models/xgboost.pkl"
+API_URL = "http://127.0.0.1:8000/api/analyze"
 
 model = joblib.load(MODEL_PATH)
+def send_to_api(features):
+    """
+    Send extracted network-flow features to FastAPI.
+    """
 
+    try:
+        response = requests.post(
+            API_URL,
+            json=features,
+            timeout=10
+        )
 
+        response.raise_for_status()
+
+        return response.json()
+
+    except requests.exceptions.RequestException as exc:
+
+        print(
+            f"API connection error: {exc}"
+        )
+
+        return None
 def analyze_flows():
 
     print()
     print("=" * 70)
-    print("AI LIVE NETWORK ANALYZER")
+    print("ANALYZING CAPTURED FLOWS")
     print("=" * 70)
 
     if not flows:
@@ -33,6 +56,9 @@ def analyze_flows():
 
         try:
 
+            if not packets:
+                continue
+
             # -------------------------------------------------
             # Basic flow information
             # -------------------------------------------------
@@ -42,10 +68,17 @@ def analyze_flows():
                 packets
             )
 
-            forward_packets = []
-            backward_packets = []
+            # -------------------------------------------------
+            # Determine forward/backward packets
+            # -------------------------------------------------
+
+            if IP not in packets[0]:
+                continue
 
             source_ip = packets[0][IP].src
+
+            forward_packets = []
+            backward_packets = []
 
             for packet in packets:
 
@@ -66,11 +99,15 @@ def analyze_flows():
             for packet in forward_packets:
 
                 if TCP in packet:
-                    destination_port = packet[TCP].dport
+                    destination_port = int(
+                        packet[TCP].dport
+                    )
                     break
 
                 if UDP in packet:
-                    destination_port = packet[UDP].dport
+                    destination_port = int(
+                        packet[UDP].dport
+                    )
                     break
 
             # -------------------------------------------------
@@ -85,12 +122,19 @@ def analyze_flows():
             )
 
             # -------------------------------------------------
-            # Prepare exact model order
+            # Verify feature count
             # -------------------------------------------------
 
             model_features = prepare_model_features(
                 features
             )
+
+            if len(model_features) != 78:
+
+                raise ValueError(
+                    f"Expected 78 features, "
+                    f"got {len(model_features)}"
+                )
 
             X = np.array(
                 [model_features],
@@ -112,13 +156,17 @@ def analyze_flows():
             )
 
             # -------------------------------------------------
-            # Class name
+            # Get class name
             # -------------------------------------------------
 
             classes = model.classes_
 
+            class_index = list(classes).index(
+                predicted_class
+            )
+
             attack_type = str(
-                classes[predicted_class]
+                classes[class_index]
             )
 
             # -------------------------------------------------
@@ -151,7 +199,7 @@ def analyze_flows():
                 risk_score = 25
 
             # -------------------------------------------------
-            # Result
+            # Display result
             # -------------------------------------------------
 
             print()
@@ -198,12 +246,42 @@ def analyze_flows():
                 f"{predicted_class}"
             )
 
+            # -------------------------------------------------
+            # Send real flow to FastAPI / MySQL
+            # -------------------------------------------------
+
+            api_result = send_to_api(
+                features
+            )
+
+            if api_result:
+
+                database_info = api_result.get(
+                    "database",
+                    {}
+                )
+
+                print(
+                    f"Database Saved: "
+                    f"{database_info.get('saved')}"
+                )
+
+                print(
+                    f"Alert ID: "
+                    f"{database_info.get('alert_id')}"
+                )
+
+            else:
+
+                print(
+                    "Database Saved: False"
+                )
+
         except Exception as exc:
 
             print(
                 f"Flow analysis error: {exc}"
             )
-
 
 def main():
 
