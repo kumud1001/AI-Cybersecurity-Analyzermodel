@@ -1,0 +1,29 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Large datasets
+data/raw/
+data/processed/
+*.csv
+
+# Experiment-generated files
+experiments/figures/
+experiments/results/
+
+# Model binaries - use Git LFS or another model store later
+models/*.pkl
+models/*.keras
+
+# Environment files
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
