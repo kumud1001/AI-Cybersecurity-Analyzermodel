@@ -8,6 +8,28 @@ data/raw/
 data/processed/
 *.csv
 
+
+# Office temporary files
+~$*.xlsx
+~$*.xls
+~$*.docx
+~$*.pptx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+# Local backup files
+*.backup.*
+*.bak
+*.backup
+
 # Experiment-generated files
 experiments/figures/
 experiments/results/
