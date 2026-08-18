@@ -82,11 +82,27 @@ flows_lock = threading.Lock()
 # SEND DATA TO FASTAPI
 # ============================================================
 
-def send_to_api(features):
+
+
+
+def send_to_api(
+    features,
+    attack_type,
+    confidence,
+    severity,
+    risk_score,
+    predicted_class
+):
 
     payload = features.copy()
 
-    # CIC feature name → Pydantic name
+    payload["attack_type"] = attack_type
+    payload["confidence"] = confidence
+    payload["severity"] = severity
+    payload["risk_score"] = risk_score
+    payload["predicted_class"] = predicted_class
+
+    # CIC feature name → API name
     payload["fwd_header_length_1"] = payload.pop(
         "fwd_header_length.1",
         0
@@ -111,7 +127,6 @@ def send_to_api(features):
         )
 
         return None
-
 
 # ============================================================
 # ANALYZE ONE FLOW
@@ -298,9 +313,13 @@ def analyze_flow(key, packets):
         # ----------------------------------------------------
 
         api_result = send_to_api(
-            features
-        )
-
+    features,
+    attack_type,
+    confidence,
+    severity,
+    risk_score,
+    predicted_class
+)
         if api_result:
 
             database_info = api_result.get(

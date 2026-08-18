@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from backend.app.database.database import get_db
-from backend.app.database.models import SecurityAlert
+from app.database.database import get_db
+from app.database.models import Alert
 
 
 router = APIRouter(
@@ -16,109 +16,63 @@ router = APIRouter(
 def dashboard_stats(
     db: Session = Depends(get_db)
 ):
-
     try:
 
-        # -----------------------------------------
-        # Total alerts
-        # -----------------------------------------
-
         total_alerts = (
-            db.query(SecurityAlert)
-            .count()
+            db.query(Alert).count()
         )
 
-        # -----------------------------------------
-        # Severity counts
-        # -----------------------------------------
-
         critical = (
-            db.query(SecurityAlert)
-            .filter(
-                SecurityAlert.severity == "CRITICAL"
-            )
+            db.query(Alert)
+            .filter(Alert.severity == "CRITICAL")
             .count()
         )
 
         high = (
-            db.query(SecurityAlert)
-            .filter(
-                SecurityAlert.severity == "HIGH"
-            )
+            db.query(Alert)
+            .filter(Alert.severity == "HIGH")
             .count()
         )
 
         medium = (
-            db.query(SecurityAlert)
-            .filter(
-                SecurityAlert.severity == "MEDIUM"
-            )
+            db.query(Alert)
+            .filter(Alert.severity == "MEDIUM")
             .count()
         )
 
         low = (
-            db.query(SecurityAlert)
-            .filter(
-                SecurityAlert.severity == "LOW"
-            )
+            db.query(Alert)
+            .filter(Alert.severity == "LOW")
             .count()
         )
 
-        # -----------------------------------------
-        # Attack type counts
-        # -----------------------------------------
-
         attack_results = (
             db.query(
-                SecurityAlert.attack_type,
-                func.count(
-                    SecurityAlert.id
-                )
+                Alert.attack_type,
+                func.count(Alert.id)
             )
-            .group_by(
-                SecurityAlert.attack_type
-            )
+            .group_by(Alert.attack_type)
             .all()
         )
 
         attack_counts = {
             attack_type: count
-            for attack_type, count
-            in attack_results
+            for attack_type, count in attack_results
         }
 
-        # -----------------------------------------
-        # Response
-        # -----------------------------------------
-
         return {
-
             "success": True,
-
-            "total_alerts":
-                total_alerts,
-
+            "total_alerts": total_alerts,
             "severity": {
-
-                "critical":
-                    critical,
-
-                "high":
-                    high,
-
-                "medium":
-                    medium,
-
-                "low":
-                    low
+                "critical": critical,
+                "high": high,
+                "medium": medium,
+                "low": low
             },
-
-            "attack_counts":
-                attack_counts
+            "attack_counts": attack_counts
         }
 
     except Exception as exc:
-
         raise HTTPException(
             status_code=500,
             detail=str(exc)
