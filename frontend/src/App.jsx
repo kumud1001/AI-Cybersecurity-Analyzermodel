@@ -17,6 +17,26 @@ function App() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [analysisError, setAnalysisError] = useState("");
+
+  const [flow, setFlow] = useState({
+    destination_port: 80,
+    flow_duration: 1000,
+    total_fwd_packets: 10,
+    total_backward_packets: 8,
+    total_length_of_fwd_packets: 500,
+    total_length_of_bwd_packets: 400,
+    flow_bytes_s: 900,
+    flow_packets_s: 18,
+    syn_flag_count: 1,
+    ack_flag_count: 10,
+    fin_flag_count: 1,
+    rst_flag_count: 0,
+    average_packet_size: 50
+  });
+
   const loadDashboard = async () => {
     try {
       setLoading(true);
@@ -37,8 +57,57 @@ function App() {
   };
 
   useEffect(() => {
+  loadDashboard();
+
+  const interval = setInterval(() => {
     loadDashboard();
-  }, []);
+  }, 5000);
+
+  return () => {
+    clearInterval(interval);
+  };
+}, []);
+
+  const handleFlowChange = (event) => {
+    const { name, value } = event.target;
+
+    setFlow((previous) => ({
+      ...previous,
+      [name]: Number(value)
+    }));
+  };
+
+  const analyzeNetwork = async (event) => {
+    event.preventDefault();
+
+    try {
+      setAnalysisLoading(true);
+      setAnalysisError("");
+      setAnalysisResult(null);
+
+      const response = await axios.post(
+        `${API_URL}/api/analyze`,
+        flow
+      );
+
+      setAnalysisResult(response.data);
+
+      // Refresh dashboard so the newly
+      // saved alert appears immediately.
+      await loadDashboard();
+
+    } catch (error) {
+      console.error("Network analysis error:", error);
+
+      setAnalysisError(
+        error.response?.data?.detail ||
+        "Unable to analyze network traffic."
+      );
+
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
 
   if (loading) {
     return <h2>Loading AI Cybersecurity Dashboard...</h2>;
@@ -75,6 +144,260 @@ function App() {
         </button>
       </header>
 
+      {/* ================================================= */}
+      {/* NETWORK TRAFFIC ANALYZER */}
+      {/* ================================================= */}
+
+      <section className="analyzer">
+
+        <h2>🔍 Network Traffic Analyzer</h2>
+
+        <p>
+          Enter network-flow information and let the XGBoost
+          model analyze the traffic.
+        </p>
+
+        <form onSubmit={analyzeNetwork}>
+
+          <div className="form-grid">
+
+            <div>
+              <label>Destination Port</label>
+              <input
+                type="number"
+                name="destination_port"
+                value={flow.destination_port}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>Flow Duration</label>
+              <input
+                type="number"
+                name="flow_duration"
+                value={flow.flow_duration}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>Forward Packets</label>
+              <input
+                type="number"
+                name="total_fwd_packets"
+                value={flow.total_fwd_packets}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>Backward Packets</label>
+              <input
+                type="number"
+                name="total_backward_packets"
+                value={flow.total_backward_packets}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>Forward Bytes</label>
+              <input
+                type="number"
+                name="total_length_of_fwd_packets"
+                value={flow.total_length_of_fwd_packets}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>Backward Bytes</label>
+              <input
+                type="number"
+                name="total_length_of_bwd_packets"
+                value={flow.total_length_of_bwd_packets}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>Flow Bytes/s</label>
+              <input
+                type="number"
+                name="flow_bytes_s"
+                value={flow.flow_bytes_s}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>Flow Packets/s</label>
+              <input
+                type="number"
+                name="flow_packets_s"
+                value={flow.flow_packets_s}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>SYN Flags</label>
+              <input
+                type="number"
+                name="syn_flag_count"
+                value={flow.syn_flag_count}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>ACK Flags</label>
+              <input
+                type="number"
+                name="ack_flag_count"
+                value={flow.ack_flag_count}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>FIN Flags</label>
+              <input
+                type="number"
+                name="fin_flag_count"
+                value={flow.fin_flag_count}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>RST Flags</label>
+              <input
+                type="number"
+                name="rst_flag_count"
+                value={flow.rst_flag_count}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+            <div>
+              <label>Average Packet Size</label>
+              <input
+                type="number"
+                name="average_packet_size"
+                value={flow.average_packet_size}
+                onChange={handleFlowChange}
+              />
+            </div>
+
+          </div>
+
+          <button
+            type="submit"
+            disabled={analysisLoading}
+          >
+            {analysisLoading
+              ? "Analyzing..."
+              : "🧠 Analyze Network Traffic"}
+          </button>
+
+        </form>
+
+        {analysisError && (
+          <div className="analysis-error">
+            ❌ {analysisError}
+          </div>
+        )}
+
+        {analysisResult && (
+          <div className="analysis-result">
+
+            <h3>Analysis Result</h3>
+
+            <div className="result-grid">
+
+              <div>
+                <strong>Attack Type</strong>
+                <span>
+                  {analysisResult.prediction.attack_type}
+                </span>
+              </div>
+
+              <div>
+                <strong>Confidence</strong>
+                <span>
+                  {(analysisResult.prediction.confidence * 100).toFixed(2)}%
+                </span>
+              </div>
+
+              <div>
+                <strong>Severity</strong>
+                <span>
+                  {analysisResult.prediction.severity}
+                </span>
+              </div>
+
+              <div>
+                <strong>Risk Score</strong>
+                <span>
+                  {analysisResult.prediction.risk_score}
+                </span>
+              </div>
+
+              <div>
+                <strong>Predicted Class</strong>
+                <span>
+                  {analysisResult.prediction.predicted_class}
+                </span>
+              </div>
+
+              <div>
+                <strong>Database</strong>
+                <span>
+                  {analysisResult.database?.saved
+                    ? `Saved — Alert #${analysisResult.database.alert_id}`
+                    : "Not saved"}
+                </span>
+              </div>
+
+            </div>
+
+            <h4>Top Predictions</h4>
+
+            <table>
+
+              <thead>
+                <tr>
+                  <th>Attack Type</th>
+                  <th>Probability</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {analysisResult.prediction.top_predictions.map(
+                  (prediction, index) => (
+                    <tr key={index}>
+                      <td>{prediction.attack_type}</td>
+                      <td>
+                        {(prediction.probability * 100).toFixed(3)}%
+                      </td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+
+            </table>
+
+          </div>
+        )}
+
+      </section>
+
+      {/* ================================================= */}
+      {/* DASHBOARD CARDS */}
+      {/* ================================================= */}
+
       <section className="cards">
 
         <div className="card">
@@ -104,6 +427,10 @@ function App() {
 
       </section>
 
+      {/* ================================================= */}
+      {/* CHART */}
+      {/* ================================================= */}
+
       <section className="chart-section">
 
         <h2>Alert Severity</h2>
@@ -128,6 +455,10 @@ function App() {
         </ResponsiveContainer>
 
       </section>
+
+      {/* ================================================= */}
+      {/* ALERT TABLE */}
+      {/* ================================================= */}
 
       <section className="alerts">
 

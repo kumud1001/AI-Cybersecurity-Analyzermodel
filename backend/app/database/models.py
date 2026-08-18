@@ -1,29 +1,53 @@
-from datetime import datetime
+from sqlalchemy import Column
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Float
+from sqlalchemy import DateTime
 
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text
-from backend.app.database.database import Base
+from app.database.database import Base
 
 
-class SecurityAlert(Base):
+class Alert(Base):
 
     __tablename__ = "security_alerts"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    attack_type = Column(String(100), nullable=False)
+    attack_type = Column(
+        String(100),
+        nullable=False
+    )
 
-    confidence = Column(Float, nullable=False)
+    confidence = Column(
+        Float,
+        nullable=False
+    )
 
-    severity = Column(String(20), nullable=False)
+    severity = Column(
+        String(20),
+        nullable=False
+    )
 
-    risk_score = Column(Float, nullable=False)
+    risk_score = Column(
+        Float,
+        nullable=False
+    )
 
-    predicted_class = Column(Integer, nullable=False)
+    predicted_class = Column(
+        Integer,
+        nullable=False
+    )
 
-    source = Column(String(50), default="XGBoost")
+    source = Column(
+        String(50),
+        nullable=True
+    )
 
     created_at = Column(
         DateTime,
-        default=datetime.utcnow,
         nullable=False
     )
