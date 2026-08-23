@@ -325,5 +325,90 @@ td {
   color: #991b1b;
   border-radius: 8px;
 }
+/* ================================================= */
+/* MITRE ATT&CK PANEL */
+/* ================================================= */
 
+.mitre-panel {
+  margin-top: 25px;
+  padding: 20px;
+  border-radius: 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+}
+
+.mitre-panel h4 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #e2e8f0;
+}
+
+.mitre-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.mitre-grid div {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.mitre-grid strong {
+  display: block;
+  color: #94a3b8;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.mitre-grid span {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.mitre-description,
+.mitre-recommendation {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  background: #1e293b;
+}
+
+.mitre-description strong,
+.mitre-recommendation strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #94a3b8;
+}
+
+.mitre-description p,
+.mitre-recommendation p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.mitre-recommendation {
+  border-left: 4px solid #2563eb;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+
+  .mitre-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .mitre-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
 }

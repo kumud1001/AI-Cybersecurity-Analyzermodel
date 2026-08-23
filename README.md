@@ -24,6 +24,40 @@ This project proposes a hybrid AI-based cybersecurity framework that combines:
 
 The goal is to provide a practical security monitoring platform capable of detecting both **known threats and anomalous network behavior**.
 
+## 2. Dataset – CICIDS2017
+
+The machine-learning component of this project was developed and evaluated using the **CICIDS2017 (Canadian Institute for Cybersecurity Intrusion Detection System 2017)** dataset.
+
+Official dataset source:
+
+https://www.unb.ca/cic/datasets/ids-2017.html
+
+CICIDS2017 contains realistic benign and malicious network traffic represented using network-flow features. The dataset includes multiple attack categories such as DoS, DDoS, PortScan, Brute Force, Web Attacks, Infiltration, Botnet, and benign traffic.
+
+### Dataset Processing
+
+The raw CICIDS2017 CSV files were cleaned and combined for the machine-learning experiments.
+
+The processed dataset used during the experiments contained approximately:
+
+- **Rows:** 2,522,362
+- **Columns:** 79
+
+The preprocessing pipeline included:
+
+1. Loading CICIDS2017 CSV files
+2. Combining the relevant traffic records
+3. Cleaning missing and invalid values
+4. Handling infinite values
+5. Removing unnecessary fields
+6. Preparing network-flow features
+7. Encoding attack labels
+8. Separating features and target labels
+9. Creating training and testing datasets
+10. Saving processed datasets for reproducible experiments
+
+The raw CICIDS2017 dataset is not stored in this GitHub repository because of its large size. Researchers can obtain the original dataset from the official Canadian Institute for Cybersecurity website.
+
 ---
 
 ## 2. System Architecture
@@ -474,6 +508,34 @@ Example benign prediction:
     "source": "XGBoost"
 }
 ```
+
+## Experimental Results
+
+Several machine-learning approaches were evaluated using the processed CICIDS2017 network-traffic data.
+
+| Model | Accuracy |
+|---|---:|
+| Random Forest | 99.17% |
+| XGBoost | 99.30% |
+| Isolation Forest | 23.32% |
+| Hybrid AI Approach | **99.91%** |
+
+### Hybrid AI Performance
+
+The final hybrid approach achieved:
+
+| Metric | Result |
+|---|---:|
+| Accuracy | **99.91%** |
+| Precision | **99.98%** |
+| Recall | **99.92%** |
+| F1-score | **99.95%** |
+
+The results indicate that combining supervised classification, anomaly detection, and rule-based detection can provide a strong approach for cybersecurity threat identification.
+
+The detailed experimental results are available in:
+
+`thesis results.xlsx`
 
 ---
 

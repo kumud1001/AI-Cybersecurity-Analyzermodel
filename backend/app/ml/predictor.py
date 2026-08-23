@@ -8,21 +8,34 @@ import pandas as pd
 # PATHS
 # ============================================================
 
+# predictor.py:
+# C:\Ai- cybersecurity Analyzer\backend\app\ml\predictor.py
+
 # Project root:
-# C:\AI- CYBERSECURITY ANALYZER
+# C:\Ai- cybersecurity Analyzer
+
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "..",
+        ".."
+    )
+)
 
 MODEL_PATH = os.path.join(
+    PROJECT_ROOT,
     "models",
     "xgboost.pkl"
 )
 
 LABEL_PATH = os.path.join(
+    PROJECT_ROOT,
     "data",
     "processed",
     "ml",
     "label_classes.csv"
 )
-
 
 # ============================================================
 # LOAD XGBOOST MODEL

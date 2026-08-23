@@ -362,7 +362,75 @@ function App() {
               </div>
 
             </div>
+                    {/* ================================================= */}
+{/* MITRE ATT&CK */}
+{/* ================================================= */}
 
+{analysisResult.mitre_attack && (
+  <div className="mitre-panel">
+
+    <h4>🛡️ MITRE ATT&CK Analysis</h4>
+
+    <div className="mitre-grid">
+
+      <div>
+        <strong>Status</strong>
+        <span>
+          {analysisResult.mitre_attack.mapped
+            ? "Mapped"
+            : "Not Mapped"}
+        </span>
+      </div>
+
+      <div>
+        <strong>Technique ID</strong>
+        <span>
+          {analysisResult.mitre_attack.technique_id || "None"}
+        </span>
+      </div>
+
+      <div>
+        <strong>Technique</strong>
+        <span>
+          {analysisResult.mitre_attack.technique ||
+            "Unknown"}
+        </span>
+      </div>
+
+      <div>
+        <strong>Tactic</strong>
+        <span>
+          {analysisResult.mitre_attack.tactic ||
+            "Unknown"}
+        </span>
+      </div>
+
+    </div>
+
+    <div className="mitre-description">
+
+      <strong>Description</strong>
+
+      <p>
+        {analysisResult.mitre_attack.description ||
+          "No description available."}
+      </p>
+
+    </div>
+
+    <div className="mitre-recommendation">
+
+      <strong>Recommended Action</strong>
+
+      <p>
+        {analysisResult.mitre_attack.recommendation ||
+          "Review the alert manually."}
+      </p>
+
+    </div>
+
+  </div>
+)}           
             <h4>Top Predictions</h4>
 
             <table>

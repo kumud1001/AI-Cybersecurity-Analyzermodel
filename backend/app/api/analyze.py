@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.database.models import Alert
+from app.ml.predictor import predict_attack
 from app.security.mitre_mapper import get_mitre_mapping
 
 
@@ -19,40 +20,100 @@ def analyze_alert(
     payload: dict,
     db: Session = Depends(get_db)
 ):
-    attack_type = payload.get("attack_type", "UNKNOWN")
+    # =========================================================
+    # XGBOOST PREDICTION
+    # =========================================================
 
-    # Get MITRE ATT&CK mapping for the detected attack
-    mitre_attack = get_mitre_mapping(attack_type)
+    prediction = predict_attack(payload)
+
+    attack_type = prediction["attack_type"]
+
+    confidence = float(
+        prediction["confidence"]
+    )
+
+    severity = prediction["severity"]
+
+    risk_score = float(
+        prediction["risk_score"]
+    )
+
+    predicted_class = int(
+        prediction["predicted_class"]
+    )
+
+    # =========================================================
+    # MITRE ATT&CK MAPPING
+    # =========================================================
+
+    mitre_attack = get_mitre_mapping(
+        attack_type
+    )
+
+    # =========================================================
+    # SAVE ALERT
+    # =========================================================
 
     alert = Alert(
-    attack_type=attack_type,
-    confidence=float(payload.get("confidence", 0)),
-    severity=payload.get("severity", "LOW"),
-    risk_score=float(payload.get("risk_score", 0)),
-    predicted_class=int(payload.get("predicted_class", 0)),
-    source="XGBoost",
+        attack_type=attack_type,
+        confidence=confidence,
+        severity=severity,
+        risk_score=risk_score,
+        predicted_class=predicted_class,
+        source="XGBoost",
 
-    mitre_technique_id=mitre_attack.get("technique_id"),
-    mitre_technique=mitre_attack.get("technique"),
-    mitre_tactic=mitre_attack.get("tactic"),
-    mitre_description=mitre_attack.get("description"),
-    mitre_recommendation=mitre_attack.get("recommendation"),
+        mitre_technique_id=mitre_attack.get(
+            "technique_id"
+        ),
 
-    created_at=datetime.now()
-)
+        mitre_technique=mitre_attack.get(
+            "technique"
+        ),
+
+        mitre_tactic=mitre_attack.get(
+            "tactic"
+        ),
+
+        mitre_description=mitre_attack.get(
+            "description"
+        ),
+
+        mitre_recommendation=mitre_attack.get(
+            "recommendation"
+        ),
+
+        created_at=datetime.now()
+    )
+
     db.add(alert)
     db.commit()
     db.refresh(alert)
+
+    # =========================================================
+    # API RESPONSE
+    # =========================================================
 
     return {
         "success": True,
 
         "prediction": {
             "attack_type": attack_type,
-            "confidence": float(payload.get("confidence", 0)),
-            "severity": payload.get("severity", "LOW"),
-            "risk_score": float(payload.get("risk_score", 0)),
-            "predicted_class": int(payload.get("predicted_class", 0))
+            "confidence": confidence,
+            "severity": severity,
+            "risk_score": risk_score,
+            "predicted_class": predicted_class,
+
+            "class_probabilities":
+                prediction.get(
+                    "class_probabilities",
+                    {}
+                ),
+
+            "top_predictions":
+                prediction.get(
+                    "top_predictions",
+                    []
+                )
         },
 
         "mitre_attack": mitre_attack,
