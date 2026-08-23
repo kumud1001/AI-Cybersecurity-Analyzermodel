@@ -47,6 +47,31 @@ class Alert(Base):
         nullable=True
     )
 
+    mitre_technique_id = Column(
+        String(20),
+        nullable=True
+    )
+
+    mitre_technique = Column(
+        String(150),
+        nullable=True
+    )
+
+    mitre_tactic = Column(
+        String(100),
+        nullable=True
+    )
+
+    mitre_description = Column(
+        String(500),
+        nullable=True
+    )
+
+    mitre_recommendation = Column(
+        String(500),
+        nullable=True
+    )
+
     created_at = Column(
         DateTime,
         nullable=False
