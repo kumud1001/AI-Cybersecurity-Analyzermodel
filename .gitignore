@@ -50,3 +50,6 @@ models/*.keras
 .DS_Store
 Thumbs.db
 .env
+backend/soc.db 
+ 
+ 
