@@ -1,9 +1,9 @@
-
 import os
 import time
 import joblib
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from tensorflow.keras.models import load_model
 
@@ -13,7 +13,9 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     confusion_matrix,
-    classification_report
+    classification_report,
+    roc_curve,
+    roc_auc_score
 )
 
 
@@ -147,26 +149,31 @@ def load_models():
     print("========================================")
 
     print("Loading Random Forest...")
+
     rf_model = joblib.load(
         RF_MODEL_FILE
     )
 
     print("Loading XGBoost...")
+
     xgb_model = joblib.load(
         XGB_MODEL_FILE
     )
 
     print("Loading Isolation Forest...")
+
     if_model = joblib.load(
         IF_MODEL_FILE
     )
 
     print("Loading LSTM Autoencoder...")
+
     lstm_model = load_model(
         LSTM_MODEL_FILE
     )
 
     print("Loading LSTM scaler...")
+
     lstm_scaler = joblib.load(
         LSTM_SCALER_FILE
     )
@@ -234,14 +241,17 @@ def get_lstm_anomaly_scores(
     print(
         "\n========================================"
     )
+
     print(
         " CALCULATING LSTM ANOMALY SCORES"
     )
+
     print(
         "========================================"
     )
 
     # Scale benign training flows
+
     X_benign_scaled = scaler.transform(
         X_benign
     )
@@ -350,9 +360,11 @@ def generate_scores(
     print(
         "\n========================================"
     )
+
     print(
         " GENERATING MODEL SCORES"
     )
+
     print(
         "========================================"
     )
@@ -445,6 +457,7 @@ def generate_scores(
         LSTM_WEIGHT * lstm_anomaly
     )
 
+    # Hybrid classification
     hybrid_prediction = np.where(
         hybrid_score >= HYBRID_THRESHOLD,
         1,
@@ -475,9 +488,11 @@ def evaluate(
     print(
         "\n========================================"
     )
+
     print(
         " HYBRID AI RESULTS"
     )
+
     print(
         "========================================"
     )
@@ -570,6 +585,149 @@ def evaluate(
 
 
 # ============================================================
+# ROC CURVE
+# ============================================================
+
+def generate_roc_curve(
+    y_test,
+    hybrid_score
+):
+
+    print(
+        "\n========================================"
+    )
+
+    print(
+        " GENERATING ROC CURVE"
+    )
+
+    print(
+        "========================================"
+    )
+
+    # Convert CIC-IDS2017 labels to binary
+    # 0 = BENIGN
+    # 1 = ATTACK
+
+    y_binary = np.where(
+        y_test == 0,
+        0,
+        1
+    )
+
+    # Calculate ROC curve
+
+    fpr, tpr, thresholds = roc_curve(
+        y_binary,
+        hybrid_score
+    )
+
+    # Calculate AUC
+
+    auc_score = roc_auc_score(
+        y_binary,
+        hybrid_score
+    )
+
+    print(
+        f"ROC-AUC: {auc_score:.6f}"
+    )
+
+    # --------------------------------------------------------
+    # Save ROC numerical data
+    # --------------------------------------------------------
+
+    os.makedirs(
+        RESULTS_DIR,
+        exist_ok=True
+    )
+
+    roc_data = pd.DataFrame({
+        "False Positive Rate": fpr,
+        "True Positive Rate": tpr,
+        "Threshold": thresholds
+    })
+
+    roc_data.to_csv(
+        os.path.join(
+            RESULTS_DIR,
+            "hybrid_roc_data.csv"
+        ),
+        index=False
+    )
+
+    # --------------------------------------------------------
+    # Plot ROC curve
+    # --------------------------------------------------------
+
+    plt.figure(
+        figsize=(8, 6)
+    )
+
+    plt.plot(
+        fpr,
+        tpr,
+        linewidth=2,
+        label=f"Hybrid AI (AUC = {auc_score:.6f})"
+    )
+
+    plt.plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+        linewidth=1,
+        label="Random Classifier"
+    )
+
+    plt.xlabel(
+        "False Positive Rate"
+    )
+
+    plt.ylabel(
+        "True Positive Rate"
+    )
+
+    plt.title(
+        "ROC Curve - Hybrid AI Threat Detection"
+    )
+
+    plt.legend(
+        loc="lower right"
+    )
+
+    plt.grid(
+        True,
+        alpha=0.3
+    )
+
+    plt.tight_layout()
+
+    roc_file = os.path.join(
+        RESULTS_DIR,
+        "hybrid_roc_curve.png"
+    )
+
+    plt.savefig(
+        roc_file,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.show()
+
+    print(
+        f"ROC curve saved: {roc_file}"
+    )
+
+    return (
+        fpr,
+        tpr,
+        thresholds,
+        auc_score
+    )
+
+
+# ============================================================
 # SAVE RESULTS
 # ============================================================
 
@@ -578,7 +736,8 @@ def save_results(
     precision,
     recall,
     f1,
-    lstm_threshold
+    lstm_threshold,
+    auc_score
 ):
 
     os.makedirs(
@@ -618,6 +777,9 @@ def save_results(
         "f1":
             f1,
 
+        "roc_auc":
+            auc_score,
+
         "lstm_threshold":
             lstm_threshold
     }
@@ -649,12 +811,15 @@ def main():
     print(
         "========================================"
     )
+
     print(
         " CIC-IDS2017 HYBRID AI DETECTOR"
     )
+
     print(
         " Experiment 3.6.0"
     )
+
     print(
         "========================================"
     )
@@ -717,6 +882,20 @@ def main():
     )
 
     # --------------------------------------------------------
+    # Generate ROC Curve
+    # --------------------------------------------------------
+
+    (
+        fpr,
+        tpr,
+        thresholds,
+        auc_score
+    ) = generate_roc_curve(
+        y_test,
+        hybrid_score
+    )
+
+    # --------------------------------------------------------
     # Save results
     # --------------------------------------------------------
 
@@ -725,7 +904,8 @@ def main():
         precision,
         recall,
         f1,
-        lstm_threshold
+        lstm_threshold,
+        auc_score
     )
 
     total_time = (
@@ -740,13 +920,23 @@ def main():
     print(
         "\n========================================"
     )
+
     print(
         " HYBRID AI EXPERIMENT COMPLETED"
     )
+
     print(
         "========================================"
     )
 
+    print(
+        f"\nFinal ROC-AUC: {auc_score:.6f}"
+    )
+
+
+# ============================================================
+# RUN
+# ============================================================
 
 if __name__ == "__main__":
     main()
