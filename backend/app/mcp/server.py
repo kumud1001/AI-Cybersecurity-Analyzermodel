@@ -57,12 +57,16 @@ def analyze_security_event(
 # ---------------------------------------------------------
 # TOOL 2: MITRE ATT&CK
 # ---------------------------------------------------------
-
 def map_mitre_attack(threat: str) -> dict:
 
     mappings = {
 
         "PORT_SCAN": {
+            "technique_id": "T1046",
+            "technique": "Network Service Scanning"
+        },
+
+        "PORTSCAN": {
             "technique_id": "T1046",
             "technique": "Network Service Scanning"
         },
@@ -77,12 +81,37 @@ def map_mitre_attack(threat: str) -> dict:
             "technique": "Brute Force"
         },
 
+        "FTP-PATATOR": {
+            "technique_id": "T1110",
+            "technique": "Brute Force"
+        },
+
+        "SSH-PATATOR": {
+            "technique_id": "T1110",
+            "technique": "Brute Force"
+        },
+
+        "WEB ATTACK - BRUTE FORCE": {
+            "technique_id": "T1110",
+            "technique": "Brute Force"
+        },
+
         "SQL_INJECTION": {
             "technique_id": "T1190",
             "technique": "Exploit Public-Facing Application"
         },
 
+        "WEB ATTACK - SQL INJECTION": {
+            "technique_id": "T1190",
+            "technique": "Exploit Public-Facing Application"
+        },
+
         "XSS": {
+            "technique_id": "T1189",
+            "technique": "Drive-by Compromise"
+        },
+
+        "WEB ATTACK - XSS": {
             "technique_id": "T1189",
             "technique": "Drive-by Compromise"
         },
@@ -93,13 +122,20 @@ def map_mitre_attack(threat: str) -> dict:
         }
     }
 
+    normalized_threat = (
+        threat.strip().upper()
+    )
+
     return mappings.get(
-        threat.upper(),
+        normalized_threat,
         {
             "technique_id": "UNKNOWN",
             "technique": "No MITRE mapping available"
         }
     )
+
+
+
 
 
 # ---------------------------------------------------------

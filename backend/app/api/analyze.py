@@ -7,6 +7,7 @@ from app.database.database import get_db
 from app.database.models import Alert
 from app.ml.predictor import predict_attack
 from app.security.mitre_mapper import get_mitre_mapping
+from app.agents.mcp_agent import MCPBasedSecurityAgent
 
 
 router = APIRouter(
@@ -41,6 +42,24 @@ def analyze_alert(
     predicted_class = int(
         prediction["predicted_class"]
     )
+
+    # =========================================================
+    # MCP CYBERSECURITY AGENT
+    # =========================================================
+
+    mcp_agent = MCPBasedSecurityAgent()
+
+    mcp_result = mcp_agent.analyze({
+        "threat": attack_type,
+        "severity": severity,
+        "confidence": confidence,
+        "source_ip": payload.get("source_ip"),
+        "destination_ip": payload.get("destination_ip"),
+        "protocol": payload.get("protocol"),
+        "destination_port": payload.get("destination_port"),
+        "packet_count": payload.get("packet_count", 1),
+        "risk_score": risk_score
+    })
 
     # =========================================================
     # MITRE ATT&CK MAPPING
@@ -117,6 +136,8 @@ def analyze_alert(
         },
 
         "mitre_attack": mitre_attack,
+
+        "mcp_agent": mcp_result,
 
         "database": {
             "saved": True,
