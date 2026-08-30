@@ -1,4 +1,4 @@
-from backend.app.mcp.server import (
+from app.mcp.server import (
     analyze_security_event,
     calculate_risk,
     map_mitre_attack,

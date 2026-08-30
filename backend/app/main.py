@@ -4,6 +4,7 @@ from app.api.alerts import router as alerts_router
 from app.api.dashboard import router as dashboard_router
 from app.api.analyze import router as analyze_router
 from fastapi.middleware.cors import CORSMiddleware
+from app.agents.agent_router import router as agent_router
 
 
 app = FastAPI(
@@ -26,6 +27,7 @@ app.add_middleware(
 app.include_router(alerts_router)
 app.include_router(dashboard_router)
 app.include_router(analyze_router)
+app.include_router(agent_router)
 
 
 

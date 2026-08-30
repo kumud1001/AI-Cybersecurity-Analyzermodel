@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.app.agents.security_agent import SecurityAgent
+from app.agents.mcp_agent import MCPBasedSecurityAgent
 
 
 router = APIRouter(
@@ -12,27 +12,28 @@ router = APIRouter(
 
 class SecurityAlert(BaseModel):
 
-    threat: str
-    severity: str
-    confidence: float
+    threat: str | None = None
+    severity: str | None = None
+    confidence: float = 0.0
     source_ip: str | None = None
     destination_ip: str | None = None
     protocol: str | None = None
     destination_port: int | None = None
-    risk_score: int
+    packet_count: int = 1
+    risk_score: int | float = 0
 
 
 @router.post("/analyze")
 def analyze_with_agent(alert: SecurityAlert):
 
-    agent = SecurityAgent()
+    agent = MCPBasedSecurityAgent()
 
-    result = agent.analyze_alert(
+    result = agent.analyze(
         alert.model_dump()
     )
 
     return {
-        "agent": "AI Cybersecurity Analyst",
+        "agent": "MCP Cybersecurity Agent",
         "status": "completed",
         "analysis": result
     }
